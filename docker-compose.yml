@@ -1,0 +1,46 @@
+version: "3.7"
+services:
+  # laravel API
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: api_laravel
+    volumes:
+      - './api:/app'
+    ports:
+      - '8000:8000'
+    depends_on:
+      - db
+    command: php -S 0.0.0.0:8000 -t public
+  
+  # Vue3 app
+  app:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    container_name: app_vue
+    volumes:
+      - './front:/app'
+    ports:
+      - '8080:8080'
+    depends_on:
+      - api
+    command: npm run serve
+  
+  # DB MongoDB
+  db:
+    image: mongo
+    container_name: db_mongo
+    environment:
+      MONGO_INITDB_DATABASE: mongo_db
+      MONGO_INITDB_ROOT_USERNAME: user
+      MONGO_INITDB_ROOT_PASSWORD: root
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./database/mongo/:/data/db
+      - ./database/dev.archive:/Databases/dev.archive
+      - ./database/production:/Databases/production
+    command: [--auth]
